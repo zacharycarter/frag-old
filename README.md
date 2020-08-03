@@ -12,12 +12,9 @@ This document will be updated as new capabilities and examples are added to the 
 
 FRAG is being developed on a MacBook Pro, so macOS will be the first supported platform. Windows and Linux support will follow, in that order.
 
-![msvc2017+](https://img.shields.io/badge/compilers--ff69b4.svg) | ![windows](https://img.shields.io/badge/platform-windows-blue.svg) | ![linux](https://img.shields.io/badge/platform-linux-blue.svg) | ![macOS](https://img.shields.io/badge/platform-linux-blue.svg)
----------------| --------|--------
-![msvc](https://img.shields.io/badge/MSVC-2017+-ff69b4.svg)  | | |
-![mingw](https://img.shields.io/badge/MINGW-5.3+-ff69b4.svg) | | |
-![gcc](https://img.shields.io/badge/GCC-5.0+-ff69b4.svg)     | | |
-![clang](https://img.shields.io/badge/CLANG-3.8+-ff69b4.svg) | | | ![yes](https://img.shields.io/badge/status-yes-green.svg)
+| Compiler Tested With | Operating System |
+| -------- | ---------------- |
+| ![clang - Apple clang version 11.0.0 (clang-1100.0.33.17)](https://img.shields.io/badge/CLANG-3.8+-ff69b4.svg) | ![supported](https://img.shields.io/badge/status-yes-green.svg) |
 
 ## Installation
 
