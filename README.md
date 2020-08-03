@@ -14,7 +14,7 @@ FRAG is being developed on a MacBook Pro, so macOS will be the first supported p
 
 | Compiler Tested With | Operating System |
 | -------- | ---------------- |
-| ![clang - Apple clang version 11.0.0 (clang-1100.0.33.17)](http://img.shields.io/badge/Apple%20clang-11.0+-ff69b4.svg) | ![supported](https://img.shields.io/badge/status-yes-green.svg) |
+| ![clang - Apple clang version 11.0.0 (clang-1100.0.33.17)](http://img.shields.io/badge/Apple clang-11.0+-ff69b4.svg) | ![macOS 10.14.6](https://img.shields.io/badge/macOS 10.14.6-yes-green.svg) |
 
 ## Installation
 
