@@ -1,0 +1,4 @@
+--define:glfw3Git
+--define:glfw3Static
+--passL:"-lstdc++"
+--threads:on
