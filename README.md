@@ -74,7 +74,7 @@ when isMainModule:
 * [Vulkan Memory Allocator](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator): Easy to integrate Vulkan memory allocation library
 * [GLFW](https://github.com/glfw/glfw): Multi-platform library for OpenGL, OpenGL ES and Vulkan application development
 
-[License (BSD 2-clause)](https://raw.githubusercontent.com/zacharycarter/frag/master/LICENSE)
+[License (MIT)](https://raw.githubusercontent.com/zacharycarter/frag/master/LICENSE)
 --------------------------------------------------------------------------------------------
 
 <a href="http://opensource.org/licenses/MIT" target="_blank">
