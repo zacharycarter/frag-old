@@ -4,3 +4,6 @@
 [submodule "lib/VulkanMemoryAllocator"]
 	path = lib/VulkanMemoryAllocator
 	url = git@github.com:GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+[submodule "lib/cr"]
+	path = lib/cr
+	url = git@github.com:fungos/cr.git
