@@ -47,7 +47,7 @@ proc main*() =
       echo "failed creating window"
       break
 
-    gfx.init()
+    gfx.init(gApp.window)
 
     plugin.load("minimal.dylib")
 
@@ -77,6 +77,8 @@ proc main*() =
       while accumulator >= dt:
         t += dt
         accumulator -= dt
+
+      gfx.drawFrame()
 
       let alpha = accumulator / dt
 

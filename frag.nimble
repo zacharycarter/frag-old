@@ -19,6 +19,13 @@ task deps, "build and install dependencies":
   else:
     echo "platform not supported"
 
+task shaders, "compile shaders":
+  when defined(macosx):
+    exec "glslc assets/shaders/src/shader.vert -o assets/shaders/vert.spv"
+    exec "glslc assets/shaders/src/shader.frag -o assets/shaders/frag.spv"
+  else:
+    echo "platform not supported"
+
 task examples, "build examples":
   exec "nim c --app:lib --out:minimal.dylib examples/minimal.nim"
 
