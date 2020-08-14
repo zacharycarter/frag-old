@@ -45,6 +45,7 @@ type
     
   GfxState = object
     vk: VulkanState
+    
 
 when defined(danger) or defined(release):
   const enableValidationLayers = false

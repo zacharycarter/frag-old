@@ -1,6 +1,6 @@
 import strformat, dynlib,
        ../../lib/[glfw, volk],
-       api, config, gfx, job, plugin, render_context
+       api, config, gfx, plugin, render_graph
 
 type
   FragApplication = object
@@ -48,6 +48,21 @@ proc main*() =
       break
 
     gfx.init(gApp.window)
+
+    var back = newAttachmentInfo()
+
+    let
+      graph = newRenderGraph()
+      depth = addPass(graph, "depth", qfGraphics)
+
+    discard addColorOutput(depth, "depth", back)
+    depth.getClearColorCb = proc(a: uint; value: ptr VkClearColorValue): bool =
+      if value != nil:
+        value.`float32`[0] = 0.0'f32
+        value.`float32`[1] = 1.0'f32
+        value.`float32`[2] = 0.0'f32
+        value.`float32`[3] = 1.0'f32
+      result = true
 
     plugin.load("minimal.dylib")
 
