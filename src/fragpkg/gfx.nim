@@ -42,10 +42,10 @@ type
     imagesInFlight: seq[VkFence]
 
     currentFrame: int
-    
+
   GfxState = object
     vk: VulkanState
-    
+
 
 when defined(danger) or defined(release):
   const enableValidationLayers = false
@@ -70,28 +70,35 @@ proc isComplete(qfi: QueueFamilyIndices): bool =
 
 when enableValidationLayers:
   proc debugCallback(messageSeverity: VkDebugUtilsMessageSeverityFlagBitsEXT; messageType: VkDebugUtilsMessageTypeFlagsEXT;
-                     pCallbackData: ptr VkDebugUtilsMessengerCallbackDataEXT;  pUserData: pointer): VkBool32 {.cdecl.} =
+                     pCallbackData: ptr VkDebugUtilsMessengerCallbackDataEXT;
+                         pUserData: pointer): VkBool32 {.cdecl.} =
     echo "validation layer: ", pCallbackData.pMessage
 
-  proc populateDebugMessengerCreateInfo(createInfo: var VkDebugUtilsMessengerCreateInfoEXT) =
+  proc populateDebugMessengerCreateInfo(
+    createInfo: var VkDebugUtilsMessengerCreateInfoEXT) =
     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT
-    createInfo.messageSeverity = uint32(VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT) or uint32(VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) or uint32(VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
-    createInfo.messageType = uint32(VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT) or uint32(VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT) or uint32(VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT)
+    createInfo.messageSeverity = uint32(
+        VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT) or uint32(
+        VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) or uint32(VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+    createInfo.messageType = uint32(VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT) or
+        uint32(VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT) or uint32(VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT)
     createInfo.pfnUserCallback = debugCallback
-  
+
   proc checkValidationLayerSupport(): bool =
     block check:
       var layerCount: uint32
       discard vkEnumerateInstanceLayerProperties(addr(layerCount), nil)
 
       var availableLayers = newSeq[VkLayerProperties](layerCount)
-      discard vkEnumerateInstanceLayerProperties(addr(layerCount), addr(availableLayers[0]))
+      discard vkEnumerateInstanceLayerProperties(addr(layerCount), addr(
+          availableLayers[0]))
 
       for layerName in validationLayers:
         var layerFound = false
 
         for layerProperties in availableLayers.mItems:
-          if cmpIgnoreStyle(layerName, cast[cstring](addr(layerProperties.layerName[0]))) == 0:
+          if cmpIgnoreStyle(layerName, cast[cstring](addr(
+              layerProperties.layerName[0]))) == 0:
             layerFound = true
             break
 
@@ -99,13 +106,26 @@ when enableValidationLayers:
           break check
 
       result = true
+else:
+  proc debugCallback(messageSeverity: VkDebugUtilsMessageSeverityFlagBitsEXT; messageType: VkDebugUtilsMessageTypeFlagsEXT;
+                     pCallbackData: ptr VkDebugUtilsMessengerCallbackDataEXT;
+                         pUserData: pointer): VkBool32 {.cdecl.} =
+    discard
+
+  proc populateDebugMessengerCreateInfo(
+    createInfo: var VkDebugUtilsMessengerCreateInfoEXT) =
+    discard
+
+  proc checkValidationLayerSupport(): bool =
+    discard
 
 proc getRequiredExtensions(): seq[cstring] =
   var
     glfwExtensionCount: uint32
     glfwExtensions: ptr UncheckedArray[cstring]
 
-  glfwExtensions = cast[ptr UncheckedArray[cstring]](glfwGetRequiredInstanceExtensions(addr(glfwExtensionCount)))
+  glfwExtensions = cast[ptr UncheckedArray[cstring]](
+      glfwGetRequiredInstanceExtensions(addr(glfwExtensionCount)))
   assert(glfwExtensionCount > 0, "failed retrieving required glfw instance extensions")
 
   add(result, toOpenArray(glfwExtensions, 0, int(glfwExtensionCount) - 1))
@@ -167,7 +187,8 @@ proc findQueueFamilies(device: VkPhysicalDevice): QueueFamilyIndices =
   vkGetPhysicalDeviceQueueFamilyProperties(device, addr(queueFamilyCount), nil)
 
   var queueFamilies = newSeq[VkQueueFamilyProperties](queueFamilyCount)
-  vkGetPhysicalDeviceQueueFamilyProperties(device, addr(queueFamilyCount), addr(queueFamilies[0]))
+  vkGetPhysicalDeviceQueueFamilyProperties(device, addr(queueFamilyCount), addr(
+      queueFamilies[0]))
 
   var i = 0'u32
   for queueFamily in queueFamilies:
@@ -175,7 +196,8 @@ proc findQueueFamilies(device: VkPhysicalDevice): QueueFamilyIndices =
       result.graphicsFamily = some(i)
 
     var presentSupport: VkBool32
-    discard vkGetPhysicalDeviceSurfaceSupportKHR(device, i, gGfx.vk.surface, addr(presentSupport))
+    discard vkGetPhysicalDeviceSurfaceSupportKHR(device, i, gGfx.vk.surface,
+        addr(presentSupport))
 
     if bool(presentSupport):
       result.presentFamily = some(i)
@@ -187,10 +209,12 @@ proc findQueueFamilies(device: VkPhysicalDevice): QueueFamilyIndices =
 
 proc checkDeviceExtensionSupport(device: VkPhysicalDevice): bool =
   var extensionCount: uint32
-  discard vkEnumerateDeviceExtensionProperties(device, nil, addr(extensionCount), nil)
+  discard vkEnumerateDeviceExtensionProperties(device, nil, addr(
+      extensionCount), nil)
 
   var availableExtensions = newSeq[VkExtensionProperties](extensionCount)
-  discard vkEnumerateDeviceExtensionProperties(device, nil, addr(extensionCount), addr(availableExtensions[0]))
+  discard vkEnumerateDeviceExtensionProperties(device, nil, addr(
+      extensionCount), addr(availableExtensions[0]))
 
   var requiredExtensions = toHashSet(deviceExtensions)
 
@@ -200,21 +224,26 @@ proc checkDeviceExtensionSupport(device: VkPhysicalDevice): bool =
   result = len(requiredExtensions) == 0
 
 proc querySwapChainSupport(device: VkPhysicalDevice): SwapChainSupportDetails =
-  discard vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, gGfx.vk.surface, addr(result.capabilities))
+  discard vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, gGfx.vk.surface,
+      addr(result.capabilities))
 
   var formatCount: uint32
-  discard vkGetPhysicalDeviceSurfaceFormatsKHR(device, gGfx.vk.surface, addr(formatCount), nil)
+  discard vkGetPhysicalDeviceSurfaceFormatsKHR(device, gGfx.vk.surface, addr(
+      formatCount), nil)
 
   if formatCount != 0:
     setLen(result.formats, formatCount)
-    discard vkGetPhysicalDeviceSurfaceFormatsKHR(device, gGfx.vk.surface, addr(formatCount), addr(result.formats[0]))
+    discard vkGetPhysicalDeviceSurfaceFormatsKHR(device, gGfx.vk.surface, addr(
+        formatCount), addr(result.formats[0]))
 
   var presentModeCount: uint32
-  discard vkGetPhysicalDeviceSurfacePresentModesKHR(device, gGfx.vk.surface, addr(presentModeCount), nil)
+  discard vkGetPhysicalDeviceSurfacePresentModesKHR(device, gGfx.vk.surface,
+      addr(presentModeCount), nil)
 
   if presentModeCount != 0:
     setLen(result.presentModes, presentModeCount)
-    discard vkGetPhysicalDeviceSurfacePresentModesKHR(device, gGfx.vk.surface, addr(presentModeCount), addr(result.presentModes[0]))
+    discard vkGetPhysicalDeviceSurfacePresentModesKHR(device, gGfx.vk.surface,
+        addr(presentModeCount), addr(result.presentModes[0]))
 
 proc deviceIsSuitable(device: VkPhysicalDevice): bool =
   let
@@ -224,7 +253,8 @@ proc deviceIsSuitable(device: VkPhysicalDevice): bool =
   var swapChainAdequate = false
   if extensionsSupported:
     let swapChainSupport = querySwapChainSupport(device)
-    swapChainAdequate = len(swapChainSupport.formats) != 0 and len(swapChainSupport.presentModes) != 0
+    swapChainAdequate = len(swapChainSupport.formats) != 0 and len(
+        swapChainSupport.presentModes) != 0
 
   result = indices.isComplete() and extensionsSupported and swapChainAdequate
 
@@ -235,7 +265,8 @@ proc pickPhysicalDevice() =
   assert(deviceCount > 0, "failed to find GPUs with vulkan support")
 
   var devices = newSeq[VkPhysicalDevice](deviceCount)
-  discard vkEnumeratePhysicalDevices(gGfx.vk.instance, addr(deviceCount), addr(devices[0]))
+  discard vkEnumeratePhysicalDevices(gGfx.vk.instance, addr(deviceCount), addr(
+      devices[0]))
 
   for device in devices:
     if deviceIsSuitable(device):
@@ -249,7 +280,8 @@ proc createLogicalDevice() =
 
   var
     queueCreateInfos: seq[VkDeviceQueueCreateInfo]
-    uniqueQueueFamilies = toHashSet([get(indices.graphicsFamily), get(indices.presentFamily)])
+    uniqueQueueFamilies = toHashSet([get(indices.graphicsFamily), get(
+        indices.presentFamily)])
 
   var queuePriority = 1.0'f32
   for queueFamily in uniqueQueueFamilies:
@@ -281,19 +313,24 @@ proc createLogicalDevice() =
   assert(vkCreateDevice(gGfx.vk.physicalDevice, addr(createInfo), nil, addr(gGfx.vk.device)) == VK_SUCCESS,
          "failed creating logical device")
 
-  vkGetDeviceQueue(gGfx.vk.device, get(indices.graphicsFamily), 0, addr(gGfx.vk.graphicsQueue))
-  vkGetDeviceQueue(gGfx.vk.device, get(indices.graphicsFamily), 0, addr(gGfx.vk.presentQueue))
+  vkGetDeviceQueue(gGfx.vk.device, get(indices.graphicsFamily), 0, addr(
+      gGfx.vk.graphicsQueue))
+  vkGetDeviceQueue(gGfx.vk.device, get(indices.graphicsFamily), 0, addr(
+      gGfx.vk.presentQueue))
 
-proc chooseSwapSurfaceFormat(availableFormats: openArray[VkSurfaceFormatKHR]): VkSurfaceFormatKHR =
+proc chooseSwapSurfaceFormat(availableFormats: openArray[
+    VkSurfaceFormatKHR]): VkSurfaceFormatKHR =
   block choice:
     for availableFormat in availableFormats:
-      if availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB and availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR:
+      if availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB and
+          availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR:
         result = availableFormat
         break choice
 
     result = availableFormats[0]
 
-proc chooseSwapPresentMode(availablePresentModes: openArray[VkPresentModeKHR]): VkPresentModeKHR =
+proc chooseSwapPresentMode(availablePresentModes: openArray[
+    VkPresentModeKHR]): VkPresentModeKHR =
   block choice:
     for availablePresentMode in availablePresentModes:
       if availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR:
@@ -302,7 +339,8 @@ proc chooseSwapPresentMode(availablePresentModes: openArray[VkPresentModeKHR]): 
 
     result = VK_PRESENT_MODE_FIFO_KHR
 
-proc chooseSwapExtent(capabilities: VkSurfaceCapabilitiesKHR; window: ptr GLFWwindow): VkExtent2D =
+proc chooseSwapExtent(capabilities: VkSurfaceCapabilitiesKHR;
+    window: ptr GLFWwindow): VkExtent2D =
   if capabilities.currentExtent.width != high(uint32):
     result = capabilities.currentExtent
   else:
@@ -312,8 +350,10 @@ proc chooseSwapExtent(capabilities: VkSurfaceCapabilitiesKHR; window: ptr GLFWwi
     result.width = uint32(width)
     result.height = uint32(height)
 
-    result.width = max(capabilities.minImageExtent.width, min(capabilities.maxImageExtent.width, result.width))
-    result.height = max(capabilities.minImageExtent.height, min(capabilities.maxImageExtent.height, result.height))
+    result.width = max(capabilities.minImageExtent.width, min(
+        capabilities.maxImageExtent.width, result.width))
+    result.height = max(capabilities.minImageExtent.height, min(
+        capabilities.maxImageExtent.height, result.height))
 
 proc createSwapChain(window: ptr GLFWwindow) =
   let
@@ -323,7 +363,8 @@ proc createSwapChain(window: ptr GLFWwindow) =
     extent = chooseSwapExtent(swapChainSupport.capabilities, window)
 
   var imageCount = swapChainSupport.capabilities.minImageCount + 1
-  if swapChainSupport.capabilities.maxImageCount > 0 and imageCount > swapChainSupport.capabilities.maxImageCount:
+  if swapChainSupport.capabilities.maxImageCount > 0 and imageCount >
+      swapChainSupport.capabilities.maxImageCount:
     imageCount = swapChainSupport.capabilities.maxImageCount
 
   var createInfo = VkSwapchainCreateInfoKHR(
@@ -343,7 +384,8 @@ proc createSwapChain(window: ptr GLFWwindow) =
 
   let indices = findQueueFamilies(gGfx.vk.physicalDevice)
 
-  var queueFamilyIndices = [get(indices.graphicsFamily), get(indices.presentFamily)]
+  var queueFamilyIndices = [get(indices.graphicsFamily), get(
+      indices.presentFamily)]
   if indices.graphicsFamily != indices.presentFamily:
     createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT
     createInfo.queueFamilyIndexCount = 2
@@ -354,9 +396,11 @@ proc createSwapChain(window: ptr GLFWwindow) =
   assert(vkCreateSwapchainKHR(gGfx.vk.device, addr(createInfo), nil, addr(gGfx.vk.swapChain)) == VK_SUCCESS,
          "failed to create swap chain")
 
-  discard vkGetSwapchainImagesKHR(gGfx.vk.device, gGfx.vk.swapChain, addr(imageCount), nil)
+  discard vkGetSwapchainImagesKHR(gGfx.vk.device, gGfx.vk.swapChain, addr(
+      imageCount), nil)
   setLen(gGfx.vk.swapChainImages, imageCount)
-  discard vkGetSwapchainImagesKHR(gGfx.vk.device, gGfx.vk.swapChain, addr(imageCount), addr(gGfx.vk.swapChainImages[0]))
+  discard vkGetSwapchainImagesKHR(gGfx.vk.device, gGfx.vk.swapChain, addr(
+      imageCount), addr(gGfx.vk.swapChainImages[0]))
 
   gGfx.vk.swapChainImageFormat = surfaceFormat.format
   gGfx.vk.swapChainExtent = extent
@@ -522,7 +566,9 @@ proc createGraphicsPipeline() =
     )
 
     colorBlendAttachment = VkPipelineColorBlendAttachmentState(
-      colorWriteMask: uint32(VK_COLOR_COMPONENT_R_BIT) or uint32(VK_COLOR_COMPONENT_G_BIT) or uint32(VK_COLOR_COMPONENT_B_BIT) or uint32(VK_COLOR_COMPONENT_A_BIT),
+      colorWriteMask: uint32(VK_COLOR_COMPONENT_R_BIT) or uint32(
+          VK_COLOR_COMPONENT_G_BIT) or uint32(VK_COLOR_COMPONENT_B_BIT) or
+          uint32(VK_COLOR_COMPONENT_A_BIT),
       blendEnable: VK_FALSE
     )
 
@@ -631,13 +677,15 @@ proc createCommandBuffers() =
     renderPassInfo.renderArea.offset = VkOffset2D(x: 0, y: 0)
     renderPassInfo.renderArea.extent = gGfx.vk.swapChainExtent
 
-    var clearColor = VkClearValue(color: VkClearColorValue(`float32`: [0.0'f32, 0.0'f32, 0.0'f32, 1.0'f32]))
+    var clearColor = VkClearValue(color: VkClearColorValue(`float32`: [0.0'f32,
+        0.0'f32, 0.0'f32, 1.0'f32]))
     renderPassInfo.clearValueCount = 1
     renderPassInfo.pClearValues = addr(clearColor)
 
     vkCmdBeginRenderPass(gGfx.vk.commandBuffers[i], addr(renderPassInfo), VK_SUBPASS_CONTENTS_INLINE)
 
-    vkCmdBindPipeline(gGfx.vk.commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, gGfx.vk.graphicsPipeline)
+    vkCmdBindPipeline(gGfx.vk.commandBuffers[i],
+        VK_PIPELINE_BIND_POINT_GRAPHICS, gGfx.vk.graphicsPipeline)
 
     vkCmdDraw(gGfx.vk.commandBuffers[i], 3, 1, 0, 0)
 
@@ -663,8 +711,10 @@ proc createSyncObjects() =
 
   for i in 0 ..< maxFramesInFlight:
     assert(vkCreateSemaphore(gGfx.vk.device, addr(semaphoreInfo), nil, addr(gGfx.vk.imageAvailableSemaphores[i])) == VK_SUCCESS and
-           vkCreateSemaphore(gGfx.vk.device, addr(semaphoreInfo), nil, addr(gGfx.vk.renderFinishedSemaphores[i])) == VK_SUCCESS and
-           vkCreateFence(gGfx.vk.device, addr(fenceInfo), nil, addr(gGfx.vk.inFlightFences[i])) == VK_SUCCESS,
+           vkCreateSemaphore(gGfx.vk.device, addr(semaphoreInfo), nil, addr(
+               gGfx.vk.renderFinishedSemaphores[i])) == VK_SUCCESS and
+           vkCreateFence(gGfx.vk.device, addr(fenceInfo), nil, addr(
+               gGfx.vk.inFlightFences[i])) == VK_SUCCESS,
            "failed creating synchronization objects for frame")
 
 proc initVulkan(window: ptr GLFWwindow) =
@@ -703,20 +753,24 @@ proc initVulkan(window: ptr GLFWwindow) =
   createSyncObjects()
 
 proc drawFrame*() =
-  discard vkWaitForFences(gGfx.vk.device, 1, addr(gGfx.vk.inFlightFences[gGfx.vk.currentFrame]), VK_TRUE, high(uint64))
+  discard vkWaitForFences(gGfx.vk.device, 1, addr(gGfx.vk.inFlightFences[
+      gGfx.vk.currentFrame]), VK_TRUE, high(uint64))
 
   var imageIndex: uint32
-  discard vkAcquireNextImageKHR(gGfx.vk.device, gGfx.vk.swapChain, high(uint64), gGfx.vk.imageAvailableSemaphores[gGfx.vk.currentFrame], nil, addr(imageIndex))
+  discard vkAcquireNextImageKHR(gGfx.vk.device, gGfx.vk.swapChain, high(uint64),
+      gGfx.vk.imageAvailableSemaphores[gGfx.vk.currentFrame], nil, addr(imageIndex))
 
   if gGfx.vk.imagesInFlight[imageIndex] != nil:
-    discard vkWaitForFences(gGfx.vk.device, 1, addr(gGfx.vk.imagesInFlight[imageIndex]), VK_TRUE, high(uint64))
-  gGfx.vk.imagesInFlight[imageIndex] = gGfx.vk.inFlightFences[gGfx.vk.currentFrame]
+    discard vkWaitForFences(gGfx.vk.device, 1, addr(gGfx.vk.imagesInFlight[
+        imageIndex]), VK_TRUE, high(uint64))
+  gGfx.vk.imagesInFlight[imageIndex] = gGfx.vk.inFlightFences[
+      gGfx.vk.currentFrame]
 
   var
-    waitSemaphores  = [gGfx.vk.imageAvailableSemaphores[gGfx.vk.currentFrame]]
+    waitSemaphores = [gGfx.vk.imageAvailableSemaphores[gGfx.vk.currentFrame]]
     waitStages = [uint32(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT)]
     signalSemaphores = [gGfx.vk.renderFinishedSemaphores[gGfx.vk.currentFrame]]
-                
+
     submitInfo = VkSubmitInfo(
       sType: VK_STRUCTURE_TYPE_SUBMIT_INFO,
       waitSemaphoreCount: 1,
@@ -728,14 +782,15 @@ proc drawFrame*() =
       pSignalSemaphores: addr(signalSemaphores[0])
     )
 
-  discard vkResetFences(gGfx.vk.device, 1, addr(gGfx.vk.inFlightFences[gGfx.vk.currentFrame]))
+  discard vkResetFences(gGfx.vk.device, 1, addr(gGfx.vk.inFlightFences[
+      gGfx.vk.currentFrame]))
 
   assert(vkQueueSubmit(gGfx.vk.graphicsQueue, 1, addr(submitInfo), gGfx.vk.inFlightFences[gGfx.vk.currentFrame]) == VK_SUCCESS,
          "failed submitting draw command buffer")
 
   var
     swapChains = [gGfx.vk.swapChain]
-    
+
     presentInfo = VkPresentInfoKHR(
       sType: VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
       waitSemaphoreCount: 1,
@@ -756,12 +811,12 @@ proc shutdownVulkan() =
     vkDestroySemaphore(gGfx.vk.device, gGfx.vk.renderFinishedSemaphores[i], nil)
     vkDestroySemaphore(gGfx.vk.device, gGfx.vk.imageAvailableSemaphores[i], nil)
     vkDestroyFence(gGfx.vk.device, gGfx.vk.inFlightFences[i], nil)
-  
+
   vkDestroyCommandPool(gGfx.vk.device, gGfx.vk.commandPool, nil)
 
   for framebuffer in gGfx.vk.swapChainFramebuffers:
     vkDestroyFramebuffer(gGfx.vk.device, framebuffer, nil)
-  
+
   vkDestroyPipeline(gGfx.vk.device, gGfx.vk.graphicsPipeline, nil)
   vkDestroyPipelineLayout(gGfx.vk.device, gGfx.vk.pipelineLayout, nil)
   vkDestroyRenderPass(gGfx.vk.device, gGfx.vk.renderPass, nil)
@@ -776,8 +831,35 @@ proc shutdownVulkan() =
     vkDestroyDebugUtilsMessengerEXT(gGfx.vk.instance, gGfx.vk.debugMessenger, nil)
 
   vkDestroySurfaceKHR(gGfx.vk.instance, gGfx.vk.surface, nil)
-  
+
   vkDestroyInstance(gGfx.vk.instance, nil)
+
+proc imageFormatIsSupported(format: VkFormat; required: VkFormatFeatureFlags;
+    tiling: VkImageTiling): bool =
+  var props: VkFormatProperties
+  vkGetPhysicalDeviceFormatProperties(gGfx.vk.physicalDevice, format, addr(props))
+  let flags = if tiling == VK_IMAGE_TILING_OPTIMAL: props.optimalTilingFeatures else: props.linearTilingFeatures
+  result = (flags and required) == required
+
+proc getDefaultDepthFormat*(): VkFormat =
+  block:
+    if imageFormatIsSupported(VK_FORMAT_D32_SFLOAT, uint32(
+        VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT),
+        VK_IMAGE_TILING_OPTIMAL):
+      result = VK_FORMAT_D32_SFLOAT
+      break
+    if imageFormatIsSupported(VK_FORMAT_X8_D24_UNORM_PACK32, uint32(
+        VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT),
+        VK_IMAGE_TILING_OPTIMAL):
+      result = VK_FORMAT_X8_D24_UNORM_PACK32
+      break
+    if imageFormatIsSupported(VK_FORMAT_D16_UNORM, uint32(
+        VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT),
+        VK_IMAGE_TILING_OPTIMAL):
+      result = VK_FORMAT_D16_UNORM
+      break
+
+    result = VK_FORMAT_UNDEFINED
 
 proc init*(window: ptr GLFWwindow) =
   initVulkan(window)

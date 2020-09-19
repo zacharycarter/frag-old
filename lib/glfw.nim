@@ -26,5 +26,6 @@ cDefine("VK_VERSION_1_0", "1")
 cDefine("GLFW_INCLUDE_VULKAN")
 cPassL("-framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo")
 
-cExclude("/Users/zacharycarter/Downloads/vk/macOS/include/")
+# TODO: Use env var here
+cExclude("/Users/zacharycarter/dev/vk/macOS/include/")
 cImport(glfw3Path, recurse = true)

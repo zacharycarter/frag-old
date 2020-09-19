@@ -6,6 +6,7 @@ export
 
 
 when isMainModule:
-  import fragpkg/app
+  import cligen,
+         fragpkg/app
 
-  app.main()
+  dispatch(app.main, help = {"run": "game or application to run with frag"})

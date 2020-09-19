@@ -81,7 +81,7 @@ cOverride:
 {.passC: "-DVK_USE_PLATFORM_MACOS_MVK".}
 {.passC: "-DVK_NO_PROTOTYPES".}
 
-cIncludeDir("/Users/zacharycarter/Downloads/vk/macOS/include/")
+cIncludeDir("/Users/zacharycarter/dev/vk/macOS/include/")
 
 cCompile(currentSourcePath.parentDir()/"volk/volk.c")
 cImport(currentSourcePath.parentDir()/"volk/volk.h", recurse = true)

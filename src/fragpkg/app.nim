@@ -1,6 +1,6 @@
-import strformat, dynlib,
-       ../../lib/[glfw, volk],
-       api, config, gfx, plugin, render_graph
+import dynlib, os, strformat,
+       ../../lib/glfw,
+       api, config, gfx, plugin
 
 type
   FragApplication = object
@@ -11,37 +11,17 @@ var gApp: FragApplication
 proc glfwErrorCb(error: int32; description: cstring) {.cdecl.} =
   echo &"glfw error: {error} - {description}"
 
-proc init(): bool =
+proc init(conf: AppConfig): bool =
   block:
     if not bool(glfwInit()):
       echo "failed initializing glfw"
-      break
-    result = true
-
-proc main*() =
-  block:
-    let entryLib = dynlib.loadLib("minimal.dylib")
-    if entryLib.isNil:
-      echo "failed loading entry point plugin"
-      break
-
-    let appConfigProc = cast[AppConfigCb](entryLib.symAddr("fragAppConfig"))
-    if appConfigProc.isNil:
-      echo "symbol `fragAppConfig` not found in entry point plugin"
-      break
-
-    var conf: AppConfig
-    appConfigProc(conf)
-    dynlib.unloadLib(entryLib)
-
-    if not init():
-      echo "failed initializing application"
       break
 
     discard glfwSetErrorCallback(glfwErrorCb)
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API)
-    gApp.window = glfwCreateWindow(conf.width, conf.height, conf.windowTitle, nil, nil)
+    gApp.window = glfwCreateWindow(conf.width, conf.height, conf.windowTitle,
+        nil, nil)
 
     if gApp.window.isNil:
       echo "failed creating window"
@@ -49,24 +29,35 @@ proc main*() =
 
     gfx.init(gApp.window)
 
-    var back = newAttachmentInfo()
-
-    let
-      graph = newRenderGraph()
-      depth = addPass(graph, "depth", qfGraphics)
-
-    discard addColorOutput(depth, "depth", back)
-    depth.getClearColorCb = proc(a: uint; value: ptr VkClearColorValue): bool =
-      if value != nil:
-        value.`float32`[0] = 0.0'f32
-        value.`float32`[1] = 1.0'f32
-        value.`float32`[2] = 0.0'f32
-        value.`float32`[3] = 1.0'f32
-      result = true
-
     plugin.load("minimal.dylib")
 
     glfwShowWindow(gApp.window)
+
+    result = true
+
+proc main*(run: string) =
+  block:
+    if not fileExists(run):
+      echo &"game or application {run} does not exist"
+      break
+
+    let entryLib = dynlib.loadLib(run)
+    if entryLib.isNil:
+      echo &"game or application {run} is not a valid shared library"
+      break
+
+    let appConfigProc = cast[AppConfigCb](entryLib.symAddr("fragAppConfig"))
+    if appConfigProc.isNil:
+      echo &"symbol 'fragAppConfig' not found in game or application: {run}"
+      break
+
+    var conf: AppConfig
+    appConfigProc(conf)
+    dynlib.unloadLib(entryLib)
+
+    if not init(conf):
+      echo "failed initializing application"
+      break
 
     let limitFPS {.global.} = 1.0'f64 / 60.0'f64
 
@@ -100,3 +91,5 @@ proc main*() =
     gfx.shutdown()
     glfwDestroyWindow(gApp.window)
     glfwTerminate()
+    quit(QuitSuccess)
+  quit(QuitFailure)

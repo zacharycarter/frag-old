@@ -11,6 +11,7 @@ type
   RenderGraphQueueFlags = set[RenderGraphQueueFlag]
 
   AttachmentInfo* = object
+    format*: VkFormat
     levels: uint
 
   RenderResourceKind = enum
@@ -48,6 +49,7 @@ type
     resourceToIndex: Table[string, int]
 
 proc newAttachmentInfo*(): AttachmentInfo =
+  result.format = VK_FORMAT_UNDEFINED
   result.levels = 1
 
 proc newRenderGraph*(): RenderGraph =

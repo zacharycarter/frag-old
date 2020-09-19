@@ -32,5 +32,5 @@ task examples, "build examples":
 # Dependencies
 
 requires "nim >= 1.3.5"
-requires "nimterop >= 0.6.7"
-requires "weave >= 0.4.9"
+requires "nimterop >= 0.6.11"
+requires "cligen >= 1.0.0"
