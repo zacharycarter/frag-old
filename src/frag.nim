@@ -9,4 +9,4 @@ when isMainModule:
   import cligen,
          fragpkg/app
 
-  dispatch(app.main, help = {"run": "game or application to run with frag"})
+  dispatch(fragAppMain, help = {"run": "game or application to run with frag"})

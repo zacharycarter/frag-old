@@ -861,7 +861,7 @@ proc getDefaultDepthFormat*(): VkFormat =
 
     result = VK_FORMAT_UNDEFINED
 
-proc init*(window: ptr GLFWwindow) =
+proc fragGfxInit*(window: ptr GLFWwindow) =
   initVulkan(window)
 
 proc shutdown*() =

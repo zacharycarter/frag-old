@@ -39,7 +39,7 @@ type
 
   FragApiPlugin* = object
     load*: proc(name: string): bool {.cdecl.}
-    addApi*: proc(name: string; version: uint32) {.cdecl.}
+    addApi*: proc(name: string; version: uint32; api: pointer) {.cdecl.}
     removeApi*: proc(name: string; version: uint32) {.cdecl.}
     getApi*: proc(kind: FragApiKind; version: uint32): pointer {.cdecl.}
     getApiByName*: proc(name: string; version: uint32): pointer {.cdecl.}
@@ -59,7 +59,7 @@ template fragPluginDecl*() =
     {.pragma: fragState, codegenDecl: """$# __attribute__((used, section("__DATA,__state"))) $#""".}
 
 template fragAppDeclConfig*(confParamName, body: untyped) =
-  proc fragAppConfig(confParamName: var AppConfig) {.cdecl, exportc, dynlib.} =
+  proc fragAppConfig(confParamName: var FragAppConfig) {.cdecl, exportc, dynlib.} =
     body
 
 template fragPluginDeclMain*(pluginParamName, eventParamName, body: untyped) =

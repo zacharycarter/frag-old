@@ -2,10 +2,10 @@ const
   ConfigMaxPlugins* = 64
 
 type
-  AppConfig* = object
+  FragAppConfig* = object
     width*: int32
     height*: int32
     appName*: string
     windowTitle*: string
 
-  AppConfigCb* = proc(conf: var AppConfig) {.cdecl.}
+  FragAppConfigCb* = proc(conf: var FragAppConfig) {.cdecl.}

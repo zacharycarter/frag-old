@@ -4,6 +4,8 @@ import dynlib, os, strformat,
 
 type
   FragApplication = object
+    appFilepath: string
+    conf: FragAppConfig
     window: ptr GLFWwindow
 
 var gApp: FragApplication
@@ -11,7 +13,7 @@ var gApp: FragApplication
 proc glfwErrorCb(error: int32; description: cstring) {.cdecl.} =
   echo &"glfw error: {error} - {description}"
 
-proc init(conf: AppConfig): bool =
+proc fragAppInit(): bool =
   block:
     if not bool(glfwInit()):
       echo "failed initializing glfw"
@@ -20,22 +22,28 @@ proc init(conf: AppConfig): bool =
     discard glfwSetErrorCallback(glfwErrorCb)
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API)
-    gApp.window = glfwCreateWindow(conf.width, conf.height, conf.windowTitle,
-        nil, nil)
+    gApp.window = glfwCreateWindow(gApp.conf.width, gApp.conf.height,
+        gApp.conf.windowTitle, nil, nil)
 
     if gApp.window.isNil:
       echo "failed creating window"
       break
 
-    gfx.init(gApp.window)
+    fragGfxInit(gApp.window)
 
-    plugin.load("minimal.dylib")
+    if not fragPluginLoadAbs(gApp.appFilepath):
+      echo &"failed loading game or application plugin: {gApp.appFilepath}"
+      break
+
+    if not fragPluginInitPlugins():
+      echo "failed initializing plugins"
+      break
 
     glfwShowWindow(gApp.window)
 
     result = true
 
-proc main*(run: string) =
+proc fragAppMain*(run: string) =
   block:
     if not fileExists(run):
       echo &"game or application {run} does not exist"
@@ -46,20 +54,22 @@ proc main*(run: string) =
       echo &"game or application {run} is not a valid shared library"
       break
 
-    let appConfigProc = cast[AppConfigCb](entryLib.symAddr("fragAppConfig"))
+    let appConfigProc = cast[FragAppConfigCb](entryLib.symAddr("fragAppConfig"))
     if appConfigProc.isNil:
       echo &"symbol 'fragAppConfig' not found in game or application: {run}"
       break
 
-    var conf: AppConfig
+    gApp.appFilepath = run
+
+    var conf: FragAppConfig
     appConfigProc(conf)
     dynlib.unloadLib(entryLib)
 
-    if not init(conf):
+    gApp.conf = conf
+
+    if not fragAppInit():
       echo "failed initializing application"
       break
-
-    let limitFPS {.global.} = 1.0'f64 / 60.0'f64
 
     var
       t = 0.0'f64
@@ -85,8 +95,6 @@ proc main*(run: string) =
         accumulator -= dt
 
       gfx.drawFrame()
-
-      let alpha = accumulator / dt
 
     gfx.shutdown()
     glfwDestroyWindow(gApp.window)
